@@ -35,58 +35,60 @@ Developed by: SAKTHIVEL P
 RegisterNumber:  25014510
 */
 
-# Import required libraries
+
+```
+# Import libraries
 import pandas as pd
-import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import SGDClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+from sklearn import tree
+import matplotlib.pyplot as plt
 
 # ------------------------------
 # Step 1: Sample dataset
 # ------------------------------
 data = {
-    'Hours_Studied': [2, 3, 4, 5, 6, 7, 8, 9],
-    'Previous_Score': [40, 50, 55, 60, 65, 70, 75, 80],
-    'Internship': [0, 0, 1, 0, 1, 1, 1, 1],  # 0 = No, 1 = Yes
-    'Placement': [0, 0, 0, 1, 1, 1, 1, 1]    # Target: 0 = Not Placed, 1 = Placed
+    'satisfaction_level': [0.38, 0.80, 0.11, 0.72, 0.37, 0.41, 0.10, 0.92],
+    'last_evaluation': [0.53, 0.86, 0.88, 0.87, 0.52, 0.50, 0.77, 0.89],
+    'number_project': [2, 5, 7, 5, 2, 2, 6, 5],
+    'average_monthly_hours': [157, 262, 272, 223, 159, 153, 247, 224],
+    'time_spend_company': [3, 6, 4, 5, 3, 3, 4, 5],
+    'Work_accident': [0, 0, 0, 0, 0, 0, 0, 0],
+    'promotion_last_5years': [0, 0, 0, 0, 0, 0, 0, 0],
+    'Departments': ['sales','accounting','hr','technical','support','management','marketing','product'],
+    'salary': ['low','medium','medium','high','low','low','medium','high'],
+    'left': [1, 1, 1, 1, 1, 0, 1, 0]  # Target variable: 1=Churn, 0=Stayed
 }
 
 df = pd.DataFrame(data)
 
 # ------------------------------
-# Step 2: Split into features and target
+# Step 2: Encode categorical variables
 # ------------------------------
-X = df[['Hours_Studied', 'Previous_Score', 'Internship']]
-y = df['Placement']
+df = pd.get_dummies(df, columns=['Departments','salary'], drop_first=True)
 
 # ------------------------------
-# Step 3: Train-test split
+# Step 3: Split into features and target
+# ------------------------------
+X = df.drop('left', axis=1)
+y = df['left']
+
+# ------------------------------
+# Step 4: Train-test split
 # ------------------------------
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
 
 # ------------------------------
-# Step 4: Feature scaling
+# Step 5: Create Decision Tree Classifier
 # ------------------------------
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
-
-# ------------------------------
-# Step 5: Create and train SGDClassifier for Logistic Regression
-# ------------------------------
-sgd_model = SGDClassifier(loss='log_loss',       # 'log' loss → logistic regression
-                          max_iter=1000,
-                          learning_rate='optimal',
-                          random_state=42)
-sgd_model.fit(X_train, y_train)
+dt_model = DecisionTreeClassifier(criterion='entropy', max_depth=4, random_state=42)
+dt_model.fit(X_train, y_train)
 
 # ------------------------------
 # Step 6: Make predictions
 # ------------------------------
-y_pred = sgd_model.predict(X_test)
-y_prob = sgd_model.predict_proba(X_test)   # Probability of placement
+y_pred = dt_model.predict(X_test)
 
 # ------------------------------
 # Step 7: Evaluate the model
@@ -96,19 +98,16 @@ print("\nAccuracy Score:", accuracy_score(y_test, y_pred))
 print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
 # ------------------------------
-# Step 8: Predict placement for a new student
+# Step 8: Visualize the decision tree
 # ------------------------------
-new_student = np.array([[6, 68, 1]])  # Example: 6 hours, 68 prev score, Internship yes
-new_student_scaled = scaler.transform(new_student)
-placement_pred = sgd_model.predict(new_student_scaled)
-placement_prob = sgd_model.predict_proba(new_student_scaled)
+plt.figure(figsize=(20,10))
+tree.plot_tree(dt_model, feature_names=X.columns, class_names=['Stayed','Churn'], filled=True)
+plt.show()
 
-print(f"\nPredicted Placement Status: {'Placed' if placement_pred[0]==1 else 'Not Placed'}")
-print(f"Probability of Placement: {placement_prob[0][1]:.2f}")
-```
+##Output:
+<img width="620" height="412" alt="Screenshot 2026-03-09 103826" src="https://github.com/user-attachments/assets/a7c0cae6-d747-4058-b447-1d4462b3cb13" />
 
-## Output:
-<img width="620" height="412" alt="image" src="https://github.com/user-attachments/assets/da563e7d-1265-4c94-8e3a-f47430570fd3" />
+<img width="1066" height="584" alt="Screenshot 2026-03-09 112410" src="https://github.com/user-attachments/assets/49357472-cac0-4e97-83d0-9d734fd7140e" />
 
 
 
